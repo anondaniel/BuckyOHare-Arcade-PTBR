@@ -261,9 +261,10 @@ def le_acentos():
     return peq, gde
 
 
-def grava_tile(d, t, linhas):
-    """Grava 8x8 pontos ('.' ou dígito hex) no tile t, conferindo que estava vazio."""
-    if any(d[t * 32:t * 32 + 32]):
+def grava_tile(d, t, linhas, vazio=True):
+    """Grava 8x8 pontos ('.' ou dígito hex) no tile t, conferindo (se vazio=True)
+    que ele estava vazio."""
+    if vazio and any(d[t * 32:t * 32 + 32]):
         raise ErroBuild(f'tile {t:03X} não está vazio na ROM')
     pos_x = {k: x for x, k in enumerate((2, 3, 0, 1, 6, 7, 4, 5))}
     for y, r in enumerate(linhas):
@@ -281,6 +282,94 @@ def desenha_acentos(d):
         cc = B.GRANDES_NOVOS[c]
         for dt, y0, x0 in ((0, 0, 0), (1, 0, 8), (0x10, 8, 0), (0x11, 8, 8)):
             grava_tile(d, cc + dt, [r[x0:x0 + 8] for r in g[y0:y0 + 8]])
+
+
+# ------------------------------------------------------------ placar
+
+PLACAR = os.path.join(B.RAIZ, '04_Graficos', 'placar.txt')
+# Tiles das palavras originais (INSERT COIN, CONTINUE, GAME OVER, PRESS,
+# START, SELECT), que passam a guardar as palavras novas.
+PLACAR_TILES = (list(range(0x250, 0x258)) + list(range(0x260, 0x268)) +
+                list(range(0x270, 0x27F)) + list(range(0x280, 0x28F)) +
+                list(range(0x290, 0x2A0)) + list(range(0x2A0, 0x2B0)) +
+                # tiles com o padrão "x" de não usado (iguais ao tile 0x10)
+                [0x249, 0x258, 0x259, 0x26F, 0x27F, 0x28F, 0x2BF, 0x2DD, 0x2DE, 0x2DF,
+                 0x2FC, 0x2FD, 0x2FE, 0x2FF])
+PLACAR_VAZIO = 0x46
+
+
+def le_placar():
+    palavras, letras, espaco, atual = [], {}, 2, None
+    with open(PLACAR, encoding='utf-8') as f:
+        for linha in f:
+            linha = linha.rstrip('\n')
+            if linha.startswith(';'):
+                continue
+            if linha.startswith('@palavra '):
+                _, tab, larg, alin, cor, texto = linha.split(' ', 5)
+                palavras.append((int(tab, 16), int(larg), alin, int(cor), texto))
+            elif linha.startswith('@espaco '):
+                espaco = int(linha.split()[1])
+            elif not linha.strip():
+                atual = None
+            elif atual is None:
+                atual = letras.setdefault(linha.strip(), [])
+            else:
+                atual.append(linha.strip())
+    for c, g in letras.items():
+        if len(g) not in (14, 16) or len({len(r) for r in g}) != 1:
+            raise ErroBuild(f'placar.txt: letra {c} precisa de 14 ou 16 linhas de mesma largura')
+    return palavras, letras, espaco
+
+
+def desenha_palavra(texto, larg_tiles, alin, cor, letras, espaco):
+    """-> 16 linhas de larg_tiles*8 caracteres ('.' ou dígito hex)."""
+    cols = []
+    for c in texto:
+        if c == ' ':
+            cols += [['.'] * 16] * espaco
+            continue
+        if c not in letras:
+            raise ErroBuild(f'placar.txt: falta a letra {c!r} (palavra {texto!r})')
+        g = letras[c]
+        g = ['.' * len(g[0])] * (16 - len(g)) + g
+        for x in range(len(g[0])):
+            cols.append([g[y][x] for y in range(16)])
+    total = larg_tiles * 8
+    if len(cols) > total:
+        raise ErroBuild(f'placar: {texto!r} tem {len(cols)} pixels; cabem {total}')
+    x0 = {'e': 2, 'd': total - 2 - len(cols), 'c': (total - len(cols)) // 2}[alin]
+    x0 = max(0, min(x0, total - len(cols)))
+    linhas = [['.'] * total for _ in range(16)]
+    for x, col in enumerate(cols):
+        for y, v in enumerate(col):
+            linhas[y][x0 + x] = {'1': f'{cor:X}', '2': '2'}.get(v, '.')
+    return [''.join(r) for r in linhas]
+
+
+def aplica_placar(p, d):
+    palavras, letras, espaco = le_placar()
+    livres = list(PLACAR_TILES)
+    ja = {}
+    for tab, larg, alin, cor, texto in palavras:
+        img = desenha_palavra(texto, larg, alin, cor, letras, espaco)
+        bytes_tab = bytearray()
+        for y0 in (0, 8):
+            for tx in range(larg):
+                t = tuple(r[tx * 8:tx * 8 + 8] for r in img[y0:y0 + 8])
+                if all(c == '.' for r in t for c in r):
+                    bytes_tab.append(PLACAR_VAZIO)
+                    continue
+                if t not in ja:
+                    if not livres:
+                        raise ErroBuild('placar: acabaram os tiles livres')
+                    ja[t] = livres.pop(0)
+                    grava_tile(d, ja[t], t, vazio=False)
+                bytes_tab.append(ja[t] - 0x200)
+        p[tab:tab + len(bytes_tab)] = bytes_tab
+    for t in livres:                       # o que sobrou fica vazio
+        d[t * 32:t * 32 + 32] = bytes(32)
+    return len(PLACAR_TILES) - len(livres)
 
 
 # ------------------------------------------------------------ patches no código
@@ -402,6 +491,10 @@ def vitrine(p, trocas):
     """Só para teste: faz a mensagem/página A mostrar o conteúdo de B."""
     for troca in trocas:
         a, b = troca.split('=')
+        if a.startswith('placar.'):        # placar.251A=254A: copia a tabela de 8+8 tiles
+            a, b = int(a.split('.')[1], 16), int(b.split('.')[-1], 16)
+            p[a:a + 16] = p[b:b + 16]
+            continue
         struct.pack_into('>I', p, ponteiro(p, a), B.L(p, ponteiro(p, b)))
 
 
@@ -411,6 +504,9 @@ def build(trocas=None):
     msgs, cenas, chefes, hud = codifica_tudo(le_blocos(TRADUCAO), p)
     usados = realoca(p, msgs, cenas, chefes)
     aplica_patches(p, hud)
+    d = B.tiles()
+    desenha_acentos(d)
+    n_placar = aplica_placar(p, d)
     if trocas:
         vitrine(p, trocas)
         SAIDA = os.path.join(B.RAIZ, '_teste', 'vitrine')
@@ -418,8 +514,6 @@ def build(trocas=None):
     q5, q6 = B.separa_programa(p)
     q5 = compensa_soma(q5, B.le('173eab01.q5'), COMPENSA_INI // 2)
     q6 = compensa_soma(q6, B.le('173eab02.q6'), COMPENSA_INI // 2)
-    d = B.tiles()
-    desenha_acentos(d)
     t8, t10 = B.separa_tiles(d)
     novos = {'173eab01.q5': q5, '173eab02.q6': q6, '173a05.t8': t8, '173a06.t10': t10}
 
@@ -438,6 +532,7 @@ def build(trocas=None):
         for nome, dados in novos.items():
             z.writestr(nome, dados)
     print(f'texto novo: {usados} bytes em {LIVRE_INI:06X} (cabem {LIVRE_FIM - LIVRE_INI})')
+    print(f'placar: {n_placar} de {len(PLACAR_TILES)} tiles usados')
     for nome, dados in novos.items():
         orig = B.le(nome)
         patch = ips(orig, dados)

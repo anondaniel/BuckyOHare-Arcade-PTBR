@@ -9,12 +9,14 @@ O QUE FOI TRADUZIDO
 - Toda a história: introdução, cenas entre as fases e falas dos chefes.
 - Nomes das fases, tela de seleção, telas de aviso e de direitos autorais,
   fichas e créditos (CRÉDITO/CRÉDITOS), dicas de botões e créditos finais.
+- Placar redesenhado: PÕE FICHA, APERTE (START), ESCOLHA, CONTINUAR e
+  FIM DE JOGO.
 - A fonte do jogo ganhou as letras acentuadas do português
   (Á À Â Ã É Ê Í Ó Ô Õ Ú Ç), também na fonte grande (Á Ã Ç e hífen).
 
-Continuam em inglês: as palavras desenhadas do placar (PRESS START,
-INSERT COIN, GAME OVER, CONTINUE, SELECT, 1UP, "Hurry Up!"), o menu de
-serviço (teste da máquina) e os nomes próprios dos personagens.
+Continuam em inglês: o botão START (é o nome do botão), "1UP" e a placa
+"Hurry Up!", o menu de serviço (teste da máquina) e os nomes próprios
+dos personagens.
 
 
 QUAL ARQUIVO USAR
