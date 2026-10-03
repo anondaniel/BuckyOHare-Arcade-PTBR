@@ -27,7 +27,7 @@ def glifo_rom(d, t):
 def main():
     d = B.tiles()
     novos = {c: [[0 if ch == '.' else int(ch, 16) for ch in r] for r in g]
-             for c, g in le_acentos().items()}
+             for c, g in le_acentos()[0].items()}
     frases = sys.argv[2:]
     larg = max(len(f) for f in frases)
     img = Image.new('RGB', (larg * 8 * Z, len(frases) * 10 * Z), CORES[0])

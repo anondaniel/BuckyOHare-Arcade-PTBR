@@ -8,7 +8,7 @@ Tiles de texto (K056832): 173a05.t8 + 173a06.t10, ROM_LOAD32_WORD. O texto é
 desenhado com tile = (byte - 0x30) & 0xFF, então:
     0x20-0x2F (espaço e ! " # ... , - . /) -> tiles 0xF0-0xFF
     0x30-0x5A (0-9 : ; < = > ? @ A-Z)       -> tiles 0x00-0x2A
-    0x90-0x9B (letras acentuadas novas)      -> tiles 0x60-0x6B (estavam vazios)
+    0x90-0x97, 0xA0-0xA3 (acentos novos)     -> tiles 0x60-0x67, 0x70-0x73 (estavam vazios)
 
 Três tipos de texto:
 
@@ -47,16 +47,26 @@ CENTRO2 = 63                      # coluna centrada = (63 - largura) // 2
 CENA_LARG, CENA_LINHAS = 43, 2    # 13..55
 CHEFE_LARG, CHEFE_LINHAS = 23, 2
 
-# Letras novas: caractere -> tile (byte no texto = tile + 0x30)
+# Letras novas da fonte pequena: caractere -> tile (byte no texto = tile + 0x30).
+# Os tiles 0x5D-0x7F da ROM estavam vazios; 0x68-0x6F e 0x78-0x7F ficam para
+# a fonte grande.
 ACENTOS = 'ÁÀÂÃÉÊÍÓÔÕÚÇ'
-TILE_ACENTO0 = 0x60
+TILES_ACENTO = list(range(0x60, 0x68)) + list(range(0x70, 0x74))
 IMPRIMIVEIS = (' !"#$%&\'()*+,-./0123456789:;=?ABCDEFGHIJKLMNOPQRSTUVWXYZ' + ACENTOS)
+
+# Fonte grande (rotina 0x1E9C): cada letra = 2x2 tiles (cc, cc+1, cc+0x10,
+# cc+0x11). O original tira cc de uma tabela de 1 byte em 0x1F2E (tile 0x100+cc);
+# o build troca por uma tabela de 16 bits para alcançar os tiles novos.
+MSG_GRANDE = {11, 12, 19, 20} | set(range(32, 40))
+TAB_GRANDE_ORIG = 0x1F2E
+GRANDES_NOVOS = {'Á': 0x68, 'Ã': 0x6A, 'Ç': 0x6C, '-': 0x6E}   # tile do canto
+GRANDE_IMPRIMIVEIS = ' !.?0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ' + ''.join(GRANDES_NOVOS)
 
 
 def codigo(c):
     """Caractere imprimível -> byte."""
     if c in ACENTOS:
-        return TILE_ACENTO0 + ACENTOS.index(c) + 0x30
+        return TILES_ACENTO[ACENTOS.index(c)] + 0x30
     if c in IMPRIMIVEIS:
         return ord(c)
     raise ValueError(f'caractere sem desenho na fonte: {c!r}')
@@ -64,8 +74,8 @@ def codigo(c):
 
 def caractere(b):
     """Byte -> caractere imprimível, ou None se for código/gráfico."""
-    if b in range(TILE_ACENTO0 + 0x30, TILE_ACENTO0 + 0x30 + len(ACENTOS)):
-        return ACENTOS[b - TILE_ACENTO0 - 0x30]
+    if b - 0x30 in TILES_ACENTO:
+        return ACENTOS[TILES_ACENTO.index(b - 0x30)]
     c = chr(b)
     return c if c in IMPRIMIVEIS else None
 
@@ -234,10 +244,11 @@ def linhas_para_pagina(linhas, larg_max, linhas_max, pausas):
             out.append(0x3C)
         n_caixa += 1
         try:
-            bs, larg = texto_para_bytes(t)
+            bs, _ = texto_para_bytes(t)
         except ValueError as e:
             erros.append(f'{e} em {t!r}')
             continue
+        larg = len(bytes(b for b in bs if chr(b) not in 'tusr').rstrip(b' '))
         cru = bytes(b for b in bs if caractere(b) is None)
         if any(chr(b) not in pausas for b in cru):
             erros.append(f'código não permitido aqui em {t!r} (só {pausas!r})')

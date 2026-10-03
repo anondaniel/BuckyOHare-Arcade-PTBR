@@ -37,10 +37,29 @@ local function rastreia(resto)
   local vistos = {}
   local t = cpu.spaces["program"]:install_read_tap(ini, fim, "rastro" .. #taps, function(off, data, mask)
     local pc = cpu.state["PC"].value
-    if not vistos[pc] then
-      vistos[pc] = true
+    local k = pc .. ":" .. off
+    if not vistos[k] then
+      vistos[k] = true
       print(string.format("quadro %d: leitura %06X PC=%06X A0=%08X A1=%08X A5=%08X A6=%08X",
         n, off, pc, cpu.state["A0"].value, cpu.state["A1"].value, cpu.state["A5"].value, cpu.state["A6"].value))
+    end
+    return data
+  end)
+  table.insert(taps, t)
+end
+
+-- <quadro> escritas <ini_hex> <fim_hex>: mostra PC, endereço e valor de cada
+-- escrita nova (combinação PC+endereço) na faixa
+local function escritas(resto)
+  local ini, fim = resto:match("escritas%s+(%x+)%s+(%x+)")
+  ini, fim = tonumber(ini, 16), tonumber(fim, 16)
+  local vistos = {}
+  local t = cpu.spaces["program"]:install_write_tap(ini, fim, "escrita" .. #taps, function(off, data, mask)
+    local pc = cpu.state["PC"].value
+    local k = pc .. ":" .. off
+    if not vistos[k] then
+      vistos[k] = true
+      print(string.format("quadro %d: escrita %06X = %04X PC=%06X", n, off, data, pc))
     end
     return data
   end)
@@ -56,6 +75,19 @@ emu.register_frame_done(function()
     if c:match("^aperta") then aperta(c)
     elseif c:match("^foto") then manager.machine.video:snapshot()
     elseif c:match("^rastreia") then rastreia(c)
+    elseif c:match("^escritas") then escritas(c)
+    elseif c:match("^chama") then
+      -- <quadro> chama <endereço_hex>: só para teste, faz um "jsr" na rotina
+      -- (empilha o PC atual e desvia; a rotina volta para onde estava)
+      local a = tonumber(c:match("chama%s+(%x+)"), 16)
+      local sp = cpu.state["SP"].value - 4
+      cpu.spaces["program"]:write_u32(sp, cpu.state["PC"].value)
+      cpu.state["SP"].value = sp
+      cpu.state["PC"].value = a
+    elseif c:match("^poke") then
+      -- <quadro> poke <endereço_hex> <byte_hex>: escreve um byte na memória
+      local a, v = c:match("poke%s+(%x+)%s+(%x+)")
+      cpu.spaces["program"]:write_u8(tonumber(a, 16), tonumber(v, 16))
     elseif c:match("^sai") then manager.machine:exit()
     end
   end

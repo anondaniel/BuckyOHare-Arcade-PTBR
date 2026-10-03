@@ -34,54 +34,56 @@ Leia antes `C:\Projetos\CONTEXTO_GERAL_CLAUDE.md`.
   traduzir trocando o texto no programa, respeitando o tamanho de cada trecho ou repontando.
   Parte do texto pode estar em gráficos (tiles).
 
-## Primeiros passos sugeridos
+## Como está montado (03/10/2026)
 
-1. Rodar no MAME com o depurador (`-debug`) e achar onde ficam o texto e a fonte (ROMs de programa
-   68000 e ROMs de tiles).
-2. Ver se a fonte tem acentos. Se não tiver, desenhar as letras nos tiles livres.
-3. Montar o pipeline do contexto geral: script que aplica a tradução sobre os arquivos do conjunto
-   e gera um conjunto modificado (ou IPS por arquivo de ROM), sempre conferindo os CRCs.
-4. No Switch, ele roda pelo RetroArch com FBNeo ou MAME. Confirme qual núcleo aceita o conjunto
-   modificado (o FBNeo confere CRC; pode ser preciso usar um nome de conjunto diferente ou um arquivo
-   de "hiscore/dat").
+Ferramentas: Python do venv `C:\Projetos\_ferramentas\venv` (Pillow, numpy); MAME 0.289 em
+`C:\Projetos\_ferramentas\mame` (tem `unidasm.exe` para desmontar 68000). O `pip install --user`
+no Python do sistema falha neste PC; use o venv.
 
-## Levantamento (03/10/2026)
+- **Papéis das ROMs** (MAME `konami/moo.cpp`, `ROM_START( bucky )`): `173eab01.q5`/`173eab02.q6`
+  programa 68000 (pares/ímpares); `173a03.t5`/`t6` dados em 0x200000; `173a07.f5` Z80; `173a05.t8`/
+  `173a06.t10` tiles do K056832 (texto); `173a10`–`a13` sprites; `173a08`/`a09` som.
+- **Build:** `02_Hacks\build.py` lê `03_Traducao\traducao.txt` (formato no cabeçalho e em
+  `original_en.txt`), valida, grava o texto novo no espaço livre (0x70A00), troca só os ponteiros,
+  aplica os patches de código, desenha os acentos (`04_Graficos\acentos.txt`), compensa a soma
+  de cada chip (o jogo confere no boot) e gera em `01_ROM`: o conjunto (`bucky\`, `bucky.zip`),
+  os IPS (`patch\`), o zip para o FBNeo (`fbneo_patched\bucky.zip`) e o pacote
+  `Bucky_OHare_PTBR_v0.9.zip` (LEIAME gerado de `06_Documentacao\LEIAME_modelo.txt`).
+  - `build.py --ida-e-volta`: o codificador reproduz o original byte a byte.
+  - `build.py --vitrine msg.11=msg.39,cena.0.0=cena.5.1`: build de teste em `_teste\vitrine` para
+    ver textos do fim do jogo nas telas do começo (seleção, "APERTE START", 1ª cena, fase 1).
+- **Testes:** `02_Hacks\roteiro.lua` no MAME sem janela (`-video none -autoboot_script`, variável
+  `ROTEIRO` com o arquivo de comandos: `aperta`, `foto`, `rastreia`, `escritas`, `poke`, `chama`).
+  Ficha só funciona depois do boot (quadro ~700); start ~900; botão 1 ~1000 escolhe o personagem.
+  `02_Hacks\previa_fonte.py` mostra palavras com a fonte e os acentos, sem o MAME.
 
-Ferramentas: Python do venv `C:\Projetos\_ferramentas\venv` (Pillow, numpy). O
-`pip install --user` no Python do sistema falha neste PC; use o venv.
+## Formatos (detalhes em `02_Hacks\buckylib.py`)
 
-- **Papéis das ROMs** (MAME `konami/moo.cpp`, `ROM_START( bucky )`):
-  - `173eab01.q5`/`173eab02.q6`: programa 68000 (bytes pares/ímpares), 0x000000–0x07FFFF;
-  - `173a03.t5`/`173a04.t6`: dados do 68000, em 0x200000;
-  - `173a07.f5`: programa Z80 do som;
-  - `173a05.t8`/`173a06.t10`: **tiles do K056832** (texto e cenários), 4 bits, `ROM_LOAD32_WORD`;
-  - `173a10`–`173a13`: sprites (K053246);
-  - `173a08`/`173a09`: amostras de som (K054539).
-- **Todo o texto do jogo está em ASCII no programa** (≈12 KB): `02_Hacks\extrair_texto.py` lista
-  280 trechos com endereço em `03_Traducao\original_en.txt`. Faixas principais:
-  - 0x040000–0x040F00: testes, aviso legal, introdução da história, créditos, nomes das fases;
-  - 0x040F00–0x046C00: falas entre as fases e dos chefes;
-  - 0x046C00–: menu de serviço (dá para deixar em inglês).
-
-  Códigos de controle prováveis: `[` (início de fala), `<` (quebra de linha), `]` (fim),
-  `t`/`u`/`s` (pausas). Nos menus, o byte antes de cada trecho parece ser a posição. Falta
-  confirmar no depurador, e achar os ponteiros que apontam para cada bloco (para poder aumentar
-  frases).
-- **Fonte:** 8x8, no começo da ROM de tiles (`02_Hacks\tiles2png.py`, imagem em
-  `_extraido\tiles_0000.png`). Tem `0-9 : ; < = > ? A-Z` e alguns símbolos; **só maiúsculas,
-  sem acentos**. Vamos precisar desenhar Á É Í Ó Ú Â Ê Ô Ã Õ Ç em tiles livres.
-- **Texto em tiles** (precisa redesenhar): "INSERT COIN", "CONTINUE", "GAME OVER", "PRESS START",
-  "SELECT", letras grandes do título e das fases (tiles ≈0x200–0x2FF).
-- Mudar a ROM de tiles muda o CRC: o FBNeo recusa conjunto com CRC diferente. Plano provável:
-  conjunto com outro nome (ex.: `buckyptbr`) só no MAME, ou um arquivo de patch para o RetroArch.
-  Decidir antes de montar o pacote.
-
-## Próximos passos
-
-1. Instalar MAME neste PC; com o depurador, achar a rotina que imprime as falas e os ponteiros.
-2. Tabela de caracteres com os acentos novos e codificador com limite de tamanho por trecho.
-3. Build: original → conjunto traduzido + patch, conferindo os CRCs.
+- **Mensagens** (80 ponteiros em 0x402E0): registros `0018LLCC` (VRAM; linha, coluna×4) + texto +
+  `[`/`]`. Cada registro precisa começar em endereço par. Duas rotinas usam a mesma tabela:
+  - fonte pequena 8x8 (0x1E16): tile = byte − 0x30; espaço/pontuação nos tiles 0xF0–0xFF;
+  - **fonte grande** 16x16 (0x1E9C), msgs 11, 12, 19, 20, 32–39: tabela por caractere; o build
+    trocou a tabela de 1 byte (0x1F2E) por uma de 16 bits (0x7FA00, rotina em 0x7F980) para usar
+    os tiles novos de Á Ã Ç e hífen. Só tem A–Z, 0–9, `! . ?`, Á Ã Ç e hífen.
+- **Cenas** (8 ponteiros em 0x79C6, cada um para N páginas): `[` caixa, `<` 2ª linha, `u t s r`
+  pausas. 43 letras × 2 linhas. **Chefes** (16 ponteiros em 0x79E6): `NOME:` + caixas de 23 × 2.
+- **Créditos do canto** (0x2600, "FREEPLAY/CREDIT/CREDITS"): o build realoca para campos de 9
+  (bloco `@hud.creditos`).
+- **Msg 28** ("INICIAR 1 FICHA(S)"): o número e o "S" são escritos pelo código em 0x7126; o build
+  muda essas colunas (conferido com `chama 70EC` + `escritas`).
+- Tiles livres usados: 0x60–0x67 e 0x70–0x73 (acentos pequenos), 0x68–0x6F e 0x78–0x7F (grandes).
+  O logotipo da Konami usa os bytes 0x70–0x8D (tiles 0x40–0x5D): não mexer.
 
 ## Situação
 
-Nada traduzido. Levantamento técnico feito em 03/10/2026. É o menor dos três (≈12 KB de texto).
+Texto 100% traduzido e conferido no MAME (versão 0.9, 03/10/2026): introdução, as 8 cenas (pela
+vitrine), nomes das 8 fases, seleção, título, créditos, fichas. Crédito da tradução na tela
+"APRESENTADO POR KONAMI". As falas dos chefes só foram validadas pelo tamanho (23 casas, o mesmo
+que a rotina limpa); ainda não foram vistas na tela.
+
+Falta / decidir com o Daniel:
+- palavras desenhadas do placar (PRESS, START, SELECT, INSERT COIN, CONTINUE, GAME OVER, 1UP,
+  "Hurry Up!"): ficam em inglês por enquanto. Ficam nos tiles 0x250–0x2AF, numa fonte estreita 8x16;
+  traduzir exige redesenhar e caber no mesmo número de tiles;
+- testar no Switch (RetroArch + FBNeo com "Allow patched romsets", ver LEIAME);
+- ver as falas dos chefes jogando (ou com trapaça de vida infinita).
