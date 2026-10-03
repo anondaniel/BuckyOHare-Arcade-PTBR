@@ -1,0 +1,20 @@
+# ROMs, imagens de disco, saves e arquivos gerados: nunca no git
+00_Original/
+01_ROM/
+_extraido/
+_teste/
+*.iso
+*.bin
+*.cue
+*.mp3
+*.nds
+*.zip
+*.srm
+*.sav
+*.state
+*.mss
+*.nv
+*.xdelta
+*.bps
+*.ips
+__pycache__/
