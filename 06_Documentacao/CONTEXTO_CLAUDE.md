@@ -84,5 +84,6 @@ jogo apaga a página de texto logo depois da 1ª caixa, então as 2ªs caixas do
 14 foram vistas com `_teste\tira_caixa.py` + `BUCKY_TRADUCAO` (build de teste sem a 1ª caixa).
 Pacote: `01_ROM\Bucky_OHare_PTBR_v1.0.zip`.
 
-Falta: copiar a versão final para o Switch (RetroArch + FBNeo, pasta `system/fbneo/patched`, ver
-LEIAME). "1UP" continua em inglês (sprite).
+**Projeto concluído em 04/10/2026.** O Daniel copiou a versão final para o Switch (RetroArch +
+FBNeo: `/retroarch/cores/system/fbneo/patched/bucky.zip`, com o bucky.zip original na pasta de
+ROMs e "Allow patched romsets" ativado) e fechou o projeto. "1UP" continua em inglês (sprite).
