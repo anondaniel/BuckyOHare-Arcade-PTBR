@@ -56,7 +56,7 @@ local function escritas(resto)
   local vistos = {}
   local t = cpu.spaces["program"]:install_write_tap(ini, fim, "escrita" .. #taps, function(off, data, mask)
     local pc = cpu.state["PC"].value
-    local k = pc .. ":" .. off
+    local k = pc .. ":" .. off .. ":" .. data
     if not vistos[k] then
       vistos[k] = true
       print(string.format("quadro %d: escrita %06X = %04X PC=%06X", n, off, data, pc))
@@ -84,6 +84,13 @@ emu.register_frame_done(function()
       cpu.spaces["program"]:write_u32(sp, cpu.state["PC"].value)
       cpu.state["SP"].value = sp
       cpu.state["PC"].value = a
+    elseif c:match("^despeja") then
+      -- <quadro> despeja <ini_hex> <tamanho_hex> <arquivo>: grava a memória num arquivo
+      local a, t, arq = c:match("despeja%s+(%x+)%s+(%x+)%s+(.+)$")
+      a, t = tonumber(a, 16), tonumber(t, 16)
+      local f = io.open(arq, "wb")
+      for i = 0, t - 1 do f:write(string.char(cpu.spaces["program"]:read_u8(a + i))) end
+      f:close()
     elseif c:match("^poke") then
       -- <quadro> poke <endereço_hex> <byte_hex>: escreve um byte na memória
       local a, v = c:match("poke%s+(%x+)%s+(%x+)")

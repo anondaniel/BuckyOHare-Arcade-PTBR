@@ -10,20 +10,19 @@ O QUE FOI TRADUZIDO
 - Nomes das fases, tela de seleção, telas de aviso e de direitos autorais,
   fichas e créditos (CRÉDITO/CRÉDITOS), dicas de botões e créditos finais.
 - Placar redesenhado: PÕE FICHA, APERTE (START), ESCOLHA, CONTINUAR e
-  FIM DE JOGO.
+  FIM DE JOGO; a placa "Hurry Up!" virou "ANDA LOGO!".
 - A fonte do jogo ganhou as letras acentuadas do português
   (Á À Â Ã É Ê Í Ó Ô Õ Ú Ç), também na fonte grande (Á Ã Ç e hífen).
 
-Continuam em inglês: o botão START (é o nome do botão), "1UP" e a placa
-"Hurry Up!", o menu de serviço (teste da máquina) e os nomes próprios
-dos personagens.
+Continuam em inglês: o botão START (é o nome do botão), "1UP", o menu de
+serviço (teste da máquina) e os nomes próprios dos personagens.
 
 
 QUAL ARQUIVO USAR
 -----------------
 O conjunto "bucky" do MAME/FBNeo (Bucky O'Hare, versão mundial EAB).
-O patch muda só 4 arquivos do conjunto; os outros continuam iguais.
-Os 4 arquivos ORIGINAIS precisam ser exatamente estes:
+O patch muda {N} arquivos do conjunto; os outros continuam iguais.
+Os {N} arquivos ORIGINAIS precisam ser exatamente estes:
 
 {ORIGINAIS}
 
@@ -33,14 +32,11 @@ COMO APLICAR
 1. Descompacte o seu bucky.zip numa pasta.
 2. Aplique cada arquivo .ips da pasta "patch" no arquivo de mesmo nome
    (por exemplo, com o Floating IPS ou o Lunar IPS):
-     173eab01.q5.ips  ->  173eab01.q5
-     173eab02.q6.ips  ->  173eab02.q6
-     173a05.t8.ips    ->  173a05.t8
-     173a06.t10.ips   ->  173a06.t10
+{LISTA_IPS}
 3. Compacte de novo todos os arquivos (sem pasta dentro do zip) com o nome
    bucky.zip.
 
-Depois do patch, os 4 arquivos ficam com estes CRC32:
+Depois do patch, os {N} arquivos ficam com estes CRC32:
 
 {FINAIS}
 
@@ -52,7 +48,7 @@ COMO JOGAR
 - RetroArch com o núcleo FBNeo: o FBNeo recusa arquivos com CRC diferente,
   mas aceita conjuntos modificados numa pasta especial:
     1. deixe o bucky.zip ORIGINAL na pasta de ROMs, como sempre;
-    2. faça um bucky.zip só com os 4 arquivos traduzidos e coloque em
+    2. faça um bucky.zip só com os {N} arquivos traduzidos e coloque em
        <pasta "system" do RetroArch>/fbneo/patched/bucky.zip
        (no Switch: /retroarch/cores/system/fbneo/patched/bucky.zip);
     3. nas opções do núcleo, ative "Allow patched romsets";

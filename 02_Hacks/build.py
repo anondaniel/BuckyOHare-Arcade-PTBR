@@ -26,6 +26,8 @@ import zipfile
 import zlib
 
 import buckylib as B
+import build_placa
+import sprites
 
 TRADUCAO = os.path.join(B.RAIZ, '03_Traducao', 'traducao.txt')
 ORIGINAL_EN = os.path.join(B.RAIZ, '03_Traducao', 'original_en.txt')
@@ -516,6 +518,11 @@ def build(trocas=None):
     q6 = compensa_soma(q6, B.le('173eab02.q6'), COMPENSA_INI // 2)
     t8, t10 = B.separa_tiles(d)
     novos = {'173eab01.q5': q5, '173eab02.q6': q6, '173a05.t8': t8, '173a06.t10': t10}
+    spr = sprites.le()
+    build_placa.aplica(spr)                # placa "Hurry Up!" -> "ANDA LOGO!"
+    for nome, dados in sprites.separa(spr).items():
+        if dados != B.le(nome):
+            novos[nome] = dados
 
     pasta = os.path.join(SAIDA, 'bucky')
     os.makedirs(pasta, exist_ok=True)
@@ -562,7 +569,8 @@ def pacote(novos):
     with open(os.path.join(B.RAIZ, '06_Documentacao', 'LEIAME_modelo.txt'), encoding='utf-8') as f:
         leiame = f.read().replace('\n', '\r\n')
     leiame = (leiame.replace('{VERSAO}', VERSAO).replace('{ORIGINAIS}', ''.join(linhas).rstrip('\r\n'))
-              .replace('{FINAIS}', finais.rstrip('\r\n')))
+              .replace('{FINAIS}', finais.rstrip('\r\n')).replace('{N}', str(len(novos)))
+              .replace('{LISTA_IPS}', '\r\n'.join(f'     {n + ".ips":17} ->  {n}' for n in novos)))
     nome_zip = os.path.join(SAIDA, f'Bucky_OHare_PTBR_v{VERSAO}.zip')
     with zipfile.ZipFile(nome_zip, 'w', zipfile.ZIP_DEFLATED) as z:
         z.writestr('LEIAME.txt', '﻿'.encode('utf-8') + leiame.encode('utf-8'))
