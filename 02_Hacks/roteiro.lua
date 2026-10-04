@@ -17,6 +17,14 @@ for linha in io.lines(os.getenv("ROTEIRO")) do
 end
 
 local cpu = manager.machine.devices[":maincpu"]
+-- última página da VRAM escolhida pelo jogo (registrador do K056832 em 0xC0033)
+pagina_vram = 0
+pagina_tap = cpu.spaces["program"]:install_write_tap(0x0C0032, 0x0C0033, "pagina", function(off, data, mask)
+  local pc = cpu.state["PC"].value
+  local nosso = (pc >= 0x0AFF00 and pc < 0x0B0000) or (pc >= 0x7A28 and pc < 0x7C00)
+  if (mask & 0x00FF) ~= 0 and not nosso then pagina_vram = data & 0xFF end
+  return data
+end)
 local soltar = {}
 local taps = {}
 local n = 0
@@ -76,6 +84,36 @@ emu.register_frame_done(function()
     elseif c:match("^foto") then manager.machine.video:snapshot()
     elseif c:match("^rastreia") then rastreia(c)
     elseif c:match("^escritas") then escritas(c)
+    elseif c:match("^seguro") then
+      -- <quadro> seguro <rotina_hex> <d7_hex> [byte_hex]: só para teste. Chama a
+      -- rotina por um trecho na RAM (0x0AFF00) que salva registradores e flags,
+      -- põe D7, chama, devolve a página da VRAM (0xC0033) que o jogo usava e
+      -- volta com rtr. Com [byte], só chama se esse byte da memória for != 0.
+      local a, d7, b = c:match("seguro%s+(%x+)%s+(%x+)%s*(%x*)")
+      local prog = cpu.spaces["program"]
+      if b == "" or prog:read_u8(tonumber(b, 16)) ~= 0 then
+        local rot = tonumber(a, 16)
+        local stub = {0x40, 0xE7, 0x48, 0xE7, 0xFF, 0xFE, 0x7E, tonumber(d7, 16) & 0xFF,
+                      0x4E, 0xB9, (rot >> 24) & 0xFF, (rot >> 16) & 0xFF, (rot >> 8) & 0xFF, rot & 0xFF,
+                      0x13, 0xFC, 0x00, pagina_vram, 0x00, 0x0C, 0x00, 0x33,
+                      0x4C, 0xDF, 0x7F, 0xFF, 0x4E, 0x77}
+        for i, v in ipairs(stub) do prog:write_u8(0x0AFF00 + i - 1, v) end
+        local sp = cpu.state["SP"].value - 4
+        prog:write_u32(sp, cpu.state["PC"].value)
+        cpu.state["SP"].value = sp
+        cpu.state["PC"].value = 0x0AFF00
+      end
+    elseif c:match("^mostrapc") then
+      print(string.format("quadro %d: PC=%06X", n, cpu.state["PC"].value))
+    elseif c:match("^sechama") then
+      -- <quadro> sechama <byte_hex> <rotina_hex>: chama a rotina só se o byte != 0
+      local b, a = c:match("sechama%s+(%x+)%s+(%x+)")
+      if cpu.spaces["program"]:read_u8(tonumber(b, 16)) ~= 0 then
+        local sp = cpu.state["SP"].value - 4
+        cpu.spaces["program"]:write_u32(sp, cpu.state["PC"].value)
+        cpu.state["SP"].value = sp
+        cpu.state["PC"].value = tonumber(a, 16)
+      end
     elseif c:match("^chama") then
       -- <quadro> chama <endereço_hex>: só para teste, faz um "jsr" na rotina
       -- (empilha o PC atual e desvia; a rotina volta para onde estava)
@@ -91,6 +129,10 @@ emu.register_frame_done(function()
       local f = io.open(arq, "wb")
       for i = 0, t - 1 do f:write(string.char(cpu.spaces["program"]:read_u8(a + i))) end
       f:close()
+    elseif c:match("^reg") then
+      -- <quadro> reg <registrador> <valor_hex>: só para teste
+      local r, v = c:match("reg%s+(%S+)%s+(%x+)")
+      cpu.state[r].value = tonumber(v, 16)
     elseif c:match("^poke") then
       -- <quadro> poke <endereço_hex> <byte_hex>: escreve um byte na memória
       local a, v = c:match("poke%s+(%x+)%s+(%x+)")

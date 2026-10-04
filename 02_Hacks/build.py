@@ -29,7 +29,7 @@ import buckylib as B
 import build_placa
 import sprites
 
-TRADUCAO = os.path.join(B.RAIZ, '03_Traducao', 'traducao.txt')
+TRADUCAO = os.environ.get('BUCKY_TRADUCAO') or os.path.join(B.RAIZ, '03_Traducao', 'traducao.txt')  # outro arquivo só para teste
 ORIGINAL_EN = os.path.join(B.RAIZ, '03_Traducao', 'original_en.txt')
 ACENTOS = os.path.join(B.RAIZ, '04_Graficos', 'acentos.txt')
 SAIDA = os.path.join(B.RAIZ, '01_ROM')
@@ -553,7 +553,7 @@ def build(trocas=None):
         pacote(novos)
 
 
-VERSAO = '0.9'
+VERSAO = '1.0'
 
 
 def pacote(novos):
