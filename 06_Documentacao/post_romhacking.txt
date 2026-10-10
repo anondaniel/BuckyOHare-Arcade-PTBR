@@ -1,0 +1,31 @@
+TÍTULO: [ARCADE] Bucky O'Hare [PT-BR]
+SEÇÃO: Lançamentos
+
+Tradução completa para português brasileiro de [b]Bucky O'Hare[/b] (fliperama, Konami, 1992) — o beat 'em up para até 4 jogadores baseado no desenho animado.
+
+[b]Status:[/b] 100% traduzido e testado — zerei o jogo do começo ao fim com a tradução, no MAME e no RetroArch/FBNeo (Switch).
+
+[b]O que foi traduzido[/b]
+[list]
+[li]Toda a história: introdução, cenas entre as fases e as falas dos 16 chefes.[/li]
+[li]Nomes das fases, seleção de personagem, telas de aviso e de direitos autorais, fichas e créditos, dicas de botões e créditos finais.[/li]
+[li]Placar redesenhado em português: PÕE FICHA, APERTE START, ESCOLHA, CONTINUAR e FIM DE JOGO.[/li]
+[li]A placa "Hurry Up!" virou "ANDA LOGO!".[/li]
+[li]A fonte ganhou todas as letras acentuadas do português (Á À Â Ã É Ê Í Ó Ô Õ Ú Ç), inclusive a fonte grande.[/li]
+[/list]
+
+Ficaram em inglês só o botão START, o "1UP", o menu de serviço (teste da máquina) e os nomes dos personagens.
+
+O teste de ROM que o jogo faz ao ligar ("RAM ROM CHECK") continua dando OK.
+
+[b]Como aplicar[/b]
+Use o conjunto [b]bucky[/b] do MAME/FBNeo (versão mundial EAB). O patch muda 8 arquivos do conjunto; aplique cada .ips da pasta "patch" no arquivo de mesmo nome e compacte de novo como bucky.zip. O LEIAME traz os hashes (CRC32, MD5 e SHA-1) de antes e depois e o passo a passo para o MAME e para o RetroArch com FBNeo — inclusive no Switch, usando a pasta fbneo/patched e a opção "Allow patched romsets".
+
+[b]Download (patches IPS + leia-me):[/b]
+[url=https://github.com/anondaniel/BuckyOHare-Arcade-PTBR/releases]https://github.com/anondaniel/BuckyOHare-Arcade-PTBR/releases[/url]
+
+Código-fonte e ferramentas: [url=https://github.com/anondaniel/BuckyOHare-Arcade-PTBR]github.com/anondaniel/BuckyOHare-Arcade-PTBR[/url]
+
+Como sempre, não distribuo a ROM — só os patches, que você aplica no seu próprio conjunto.
+
+[b]Créditos:[/b] tradução e hacking — Daniel Figueira.
