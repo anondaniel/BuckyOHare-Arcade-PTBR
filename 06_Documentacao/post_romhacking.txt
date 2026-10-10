@@ -3,6 +3,8 @@ SEÇÃO: Lançamentos
 
 Tradução completa para português brasileiro de [b]Bucky O'Hare[/b] (fliperama, Konami, 1992) — o beat 'em up para até 4 jogadores baseado no desenho animado.
 
+[img]https://raw.githubusercontent.com/anondaniel/BuckyOHare-Arcade-PTBR/main/06_Documentacao/telas/mosaico.png[/img]
+
 [b]Status:[/b] 100% traduzido e testado — zerei o jogo do começo ao fim com a tradução, no MAME e no RetroArch/FBNeo (Switch).
 
 [b]O que foi traduzido[/b]
