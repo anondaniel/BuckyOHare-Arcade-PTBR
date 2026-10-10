@@ -87,3 +87,7 @@ Pacote: `01_ROM\Bucky_OHare_PTBR_v1.0.zip`.
 **Projeto concluído em 04/10/2026.** O Daniel copiou a versão final para o Switch (RetroArch +
 FBNeo: `/retroarch/cores/system/fbneo/patched/bucky.zip`, com o bucky.zip original na pasta de
 ROMs e "Allow patched romsets" ativado) e fechou o projeto. "1UP" continua em inglês (sprite).
+
+**10/10/2026:** o Daniel zerou o jogo com a tradução, tudo certo. Publicado no GitHub
+(`anondaniel/BuckyOHare-Arcade-PTBR`, release v1.0 com o pacote) e divulgado no
+romhacking.net.br, como o Yu Yu.
