@@ -90,4 +90,6 @@ ROMs e "Allow patched romsets" ativado) e fechou o projeto. "1UP" continua em in
 
 **10/10/2026:** o Daniel zerou o jogo com a tradução, tudo certo. Publicado no GitHub
 (`anondaniel/BuckyOHare-Arcade-PTBR`, release v1.0 com o pacote) e divulgado no
-romhacking.net.br, como o Yu Yu.
+romhacking.net.br, como o Yu Yu: https://www.romhacking.net.br/index.php?topic=3540.0
+(Lançamentos, "[ARCADE] Bucky O'Hare [PT-BR]"). Telas para divulgação em
+`06_Documentacao\telas\` (mosaico.png + 9 telas em 2x).
